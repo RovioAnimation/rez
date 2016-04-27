@@ -117,9 +117,9 @@ class CMD(Shell):
             if bind_rez:
                 ex.interpreter._bind_interactive_rez()
             if print_msg and not quiet:
-#                ex.info('')
-#                ex.info('You are now in a rez-configured environment.')
-#                ex.info('')
+                ex.info('.')
+                ex.info('You are now in a RAC rez-configured environment.')
+                ex.info('.')
                 if system.is_production_rez_install:
                     ex.command("cmd /Q /K rezolve context")
 
@@ -185,7 +185,7 @@ class CMD(Shell):
         self._addline(self.setenv(key, value))
 
     def alias(self, key, value):
-        self._addline("doskey %s=%s" % (key, value))
+        self._addline("C:\\Windows\\System32\\doskey %s=%s" % (key, value))
 
     def comment(self, value):
         for line in value.split('\n'):
@@ -193,7 +193,11 @@ class CMD(Shell):
 
     def info(self, value):
         for line in value.split('\n'):
-            self._addline('echo %s' % line)
+            # Catch for printing a blank newline - 'echo.'
+            if line == '.':
+                self._addline('echo%s' % line)
+            else:
+                self._addline('echo %s' % line)
 
     def error(self, value):
         for line in value.split('\n'):
