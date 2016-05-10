@@ -238,7 +238,7 @@ class UnixShell(Shell):
                 ex.interpreter._bind_interactive_rez()
             if print_msg and add_rez and not quiet:
                 ex.info('')
-                ex.info('You are now in a rez-configured environment.')
+                ex.info('You are now in a RAC rez-configured environment.')
                 ex.info('')
                 if system.is_production_rez_install:
                     ex.command('rezolve context')
