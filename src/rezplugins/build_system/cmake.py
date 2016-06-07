@@ -12,6 +12,7 @@ from rez.config import config
 from rez.backport.shutilwhich import which
 from rez.vendor.schema.schema import Or
 from rez.shells import create_shell
+from multiprocessing import cpu_count
 import functools
 import os.path
 import sys
@@ -120,7 +121,7 @@ class CMakeBuildSystem(BuildSystem):
         cmd += (self.build_args or [])
 
         cmd.append("-DCMAKE_INSTALL_PREFIX=%s" % install_path)
-        cmd.append("-DCMAKE_MODULE_PATH=%s" % 
+        cmd.append("-DCMAKE_MODULE_PATH=%s" %
                    sh.get_key_token("CMAKE_MODULE_PATH").replace('\\', '/'))
         cmd.append("-DCMAKE_BUILD_TYPE=%s" % self.build_target)
         cmd.append("-DREZ_BUILD_TYPE=%s" % build_type.name)
@@ -210,7 +211,7 @@ class CMakeBuildSystem(BuildSystem):
         executor.env.CMAKE_MODULE_PATH.append(cmake_path.replace('\\', '/'))
         executor.env.REZ_BUILD_DOXYFILE = os.path.join(template_path, 'Doxyfile')
         executor.env.REZ_BUILD_VARIANT_INDEX = variant.index or 0
-        executor.env.REZ_BUILD_THREAD_COUNT = package.config.build_thread_count
+        executor.env.REZ_BUILD_THREAD_COUNT = package.config.build_thread_count or cpu_count()
         # build always occurs on a filesystem package, thus 'filepath' attribute
         # exists. This is not the case for packages in general.
         executor.env.REZ_BUILD_PROJECT_FILE = package.filepath
@@ -252,16 +253,16 @@ def register_plugin():
 
 
 # Copyright 2016 Allan Johns.
-# 
+#
 # This library is free software: you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation, either
 # version 3 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.  If not, see <http://www.gnu.org/licenses/>.
