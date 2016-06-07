@@ -12,6 +12,7 @@ from rez.config import config
 from rez.backport.shutilwhich import which
 from rez.vendor.schema.schema import Or
 from rez.shells import create_shell
+from multiprocessing import cpu_count
 import functools
 import os.path
 import sys
@@ -120,7 +121,7 @@ class CMakeBuildSystem(BuildSystem):
         cmd += (self.build_args or [])
 
         cmd.append("-DCMAKE_INSTALL_PREFIX=%s" % install_path)
-        cmd.append("-DCMAKE_MODULE_PATH=%s" % sh.get_key_token("CMAKE_MODULE_PATH"))
+        cmd.append("-DCMAKE_MODULE_PATH=%s" % sh.get_key_token("CMAKE_MODULE_PATH").replace('\\','/'))
         cmd.append("-DCMAKE_BUILD_TYPE=%s" % self.build_target)
         cmd.append("-DREZ_BUILD_TYPE=%s" % build_type.name)
         cmd.append("-DREZ_BUILD_INSTALL=%d" % (1 if install else 0))
@@ -174,9 +175,12 @@ class CMakeBuildSystem(BuildSystem):
             cmd = ["make"]
         cmd += (self.child_build_args or [])
 
-        if not any(x.startswith("-j") for x in (self.child_build_args or [])):
-            n = variant.config.build_thread_count
-            cmd.append("-j%d" % n)
+        # nmake has no -j
+        #
+        if platform_.name != 'windows':
+            if not any(x.startswith("-j") for x in (self.child_build_args or [])):
+                n = variant.config.build_thread_count or cpu_count()
+                cmd.append("-j%d" % n)
 
         # execute make within the build env
         _pr("\nExecuting: %s" % ' '.join(cmd))
@@ -204,10 +208,10 @@ class CMakeBuildSystem(BuildSystem):
         cmake_path = os.path.join(os.path.dirname(__file__), "cmake_files")
         template_path = os.path.join(os.path.dirname(__file__), "template_files")
 
-        executor.env.CMAKE_MODULE_PATH.append(cmake_path)
+        executor.env.CMAKE_MODULE_PATH.append(cmake_path.replace('\\','/'))
         executor.env.REZ_BUILD_DOXYFILE = os.path.join(template_path, 'Doxyfile')
         executor.env.REZ_BUILD_VARIANT_INDEX = variant.index or 0
-        executor.env.REZ_BUILD_THREAD_COUNT = package.config.build_thread_count
+        executor.env.REZ_BUILD_THREAD_COUNT = package.config.build_thread_count or cpu_count()
         # build always occurs on a filesystem package, thus 'filepath' attribute
         # exists. This is not the case for packages in general.
         executor.env.REZ_BUILD_PROJECT_FILE = package.filepath
